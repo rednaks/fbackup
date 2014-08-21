@@ -10,4 +10,5 @@ Ensure you have `python-pip` and `python-virtualenv` installed on your computer
     pip install -r requirements.txt
 
 == Running :
-TODO
+
+    ./fbackup access_token message_id
