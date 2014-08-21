@@ -23,6 +23,7 @@ import facebook
 
 import requests
 import sys
+import json
 
 facebook_access_token = ''
 facebook_message_id = ''
@@ -32,7 +33,51 @@ def show_help(program):
   print "Usage: {} access_token message_id".format(program)
 
 
+def get_root_message(api, message_id):
+  return api.get_object(message_id)
+
+
+def fetch_discussion(root):
+ 
+  data = root['data']
+
+  if(len(data) == 0):
+    print "No more pages!"
+    return data # emptry list
+
+  next_url = root['paging']['next']
+#  print next_url
+
+  res = requests.get(next_url)
+  if(res.ok):
+    root = json.loads(res.content)
+  else:
+    print 'Error :s {}'.format(res.status_code)
+    return []
+
+  print "Next page ..."
+  d = fetch_discussion(root)
+  return d + data
+
+
 if __name__ == '__main__':
   if(len(sys.argv)) < 2:
     show_help(sys.argv[0])
     sys.exit(-1)
+
+  facebook_access_token = sys.argv[1]
+  facebook_message_id = sys.argv[2]
+
+  graph = facebook.GraphAPI(facebook_access_token)
+
+  root_msg = get_root_message(graph, facebook_message_id)
+
+
+  discussion_data = fetch_discussion(root_msg['comments'])
+
+  fp = open('{}.json'.format(facebook_message_id), 'w+')
+  json.dump(discussion_data, fp)
+  fp.close()
+
+  print "Finished work ! :)"
+
